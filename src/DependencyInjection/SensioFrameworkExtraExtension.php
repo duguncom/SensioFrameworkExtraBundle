@@ -53,8 +53,6 @@ class SensioFrameworkExtraExtension extends Extension
 
         if ($annotationsToLoad) {
             // must be first
-            $loader->load('annotations.xml');
-
             foreach ($annotationsToLoad as $configFile) {
                 $loader->load($configFile);
             }
