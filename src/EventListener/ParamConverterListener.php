@@ -25,26 +25,16 @@ use Symfony\Component\HttpKernel\KernelEvents;
  */
 class ParamConverterListener implements EventSubscriberInterface
 {
-    /**
-     * @var ParamConverterManager
-     */
-    private $manager;
-
-    private $autoConvert;
-
-    /**
-     * @param bool $autoConvert Auto convert non-configured objects
-     */
-    public function __construct(ParamConverterManager $manager, $autoConvert = true)
-    {
-        $this->manager = $manager;
-        $this->autoConvert = $autoConvert;
+    public function __construct(
+        private readonly ParamConverterManager $manager,
+        private $autoConvert = true,
+    ) {
     }
 
     /**
      * Modifies the ParamConverterManager instance.
      */
-    public function onKernelController(KernelEvent $event)
+    public function onKernelController(KernelEvent $event): void
     {
         $controller = $event->getController();
         $request = $event->getRequest();
@@ -119,10 +109,7 @@ class ParamConverterListener implements EventSubscriberInterface
         return null;
     }
 
-    /**
-     * @return array
-     */
-    public static function getSubscribedEvents()
+    public static function getSubscribedEvents(): array
     {
         return [
             KernelEvents::CONTROLLER => 'onKernelController',
