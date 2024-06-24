@@ -40,10 +40,18 @@ class ParamConverterListener implements EventSubscriberInterface
         $request = $event->getRequest();
         $configurations = [];
 
-        if ($configuration = $request->attributes->get('_converters')) {
-            foreach (\is_array($configuration) ? $configuration : [$configuration] as $configuration) {
-                $configurations[$configuration->getName()] = $configuration;
-            }
+        $object = new \ReflectionObject($controller[0]);
+        $method = $object->getMethod($controller[1]);
+
+        $entityAttributes = $method->getAttributes(ParamConverter::class);
+        if ([] === $entityAttributes) {
+            return;
+        }
+
+        foreach ($entityAttributes as $entityAttribute) {
+            /** @var ParamConverter $entityAttribute */
+            $entityAttribute = $entityAttribute->newInstance();
+            $configurations[$entityAttribute->getName()] = $entityAttribute;
         }
 
         // automatically apply conversion for non-configured objects
