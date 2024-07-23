@@ -22,7 +22,7 @@ use Symfony\Component\DependencyInjection\Reference;
  */
 class AddParamConverterPass implements CompilerPassInterface
 {
-    public function process(ContainerBuilder $container)
+    public function process(ContainerBuilder $container): void
     {
         if (false === $container->hasDefinition('sensio_framework_extra.converter.manager')) {
             return;
@@ -34,13 +34,13 @@ class AddParamConverterPass implements CompilerPassInterface
 
         foreach ($container->findTaggedServiceIds('request.param_converter') as $id => $converters) {
             foreach ($converters as $converter) {
-                $name = isset($converter['converter']) ? $converter['converter'] : null;
+                $name = $converter['converter'] ?? null;
 
                 if (null !== $name && \in_array($name, $disabled)) {
                     continue;
                 }
 
-                $priority = isset($converter['priority']) ? $converter['priority'] : 0;
+                $priority = $converter['priority'] ?? 0;
 
                 if ('false' === $priority || false === $priority) {
                     $priority = null;

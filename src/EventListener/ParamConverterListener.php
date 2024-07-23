@@ -25,35 +25,37 @@ use Symfony\Component\HttpKernel\KernelEvents;
  */
 class ParamConverterListener implements EventSubscriberInterface
 {
-    /**
-     * @var ParamConverterManager
-     */
-    private $manager;
-
-    private $autoConvert;
-
-    /**
-     * @param bool $autoConvert Auto convert non-configured objects
-     */
-    public function __construct(ParamConverterManager $manager, $autoConvert = true)
-    {
-        $this->manager = $manager;
-        $this->autoConvert = $autoConvert;
+    public function __construct(
+        private readonly ParamConverterManager $manager,
+        private $autoConvert = true,
+    ) {
     }
 
     /**
      * Modifies the ParamConverterManager instance.
      */
-    public function onKernelController(KernelEvent $event)
+    public function onKernelController(KernelEvent $event): void
     {
         $controller = $event->getController();
+        if (!\is_array($controller)) {
+            return;
+        }
+
         $request = $event->getRequest();
         $configurations = [];
 
-        if ($configuration = $request->attributes->get('_converters')) {
-            foreach (\is_array($configuration) ? $configuration : [$configuration] as $configuration) {
-                $configurations[$configuration->getName()] = $configuration;
-            }
+        $object = new \ReflectionObject($controller[0]);
+        $method = $object->getMethod($controller[1]);
+
+        $entityAttributes = $method->getAttributes(ParamConverter::class);
+        if ([] === $entityAttributes) {
+            return;
+        }
+
+        foreach ($entityAttributes as $entityAttribute) {
+            /** @var ParamConverter $entityAttribute */
+            $entityAttribute = $entityAttribute->newInstance();
+            $configurations[$entityAttribute->getName()] = $entityAttribute;
         }
 
         // automatically apply conversion for non-configured objects
@@ -119,10 +121,7 @@ class ParamConverterListener implements EventSubscriberInterface
         return null;
     }
 
-    /**
-     * @return array
-     */
-    public static function getSubscribedEvents()
+    public static function getSubscribedEvents(): array
     {
         return [
             KernelEvents::CONTROLLER => 'onKernelController',
