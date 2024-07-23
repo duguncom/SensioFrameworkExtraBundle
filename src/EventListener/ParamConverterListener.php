@@ -37,6 +37,10 @@ class ParamConverterListener implements EventSubscriberInterface
     public function onKernelController(KernelEvent $event): void
     {
         $controller = $event->getController();
+        if (!\is_array($controller)) {
+            return;
+        }
+
         $request = $event->getRequest();
         $configurations = [];
 
